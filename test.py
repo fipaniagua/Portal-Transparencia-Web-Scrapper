@@ -52,9 +52,25 @@ for id_option in options[:18]:
         for sub_option in sub_options:
             print("scope2:", sub_option)
             try:
+                browser.implicitly_wait(40)
                 browser.find_element_by_id(sub_option).click()
             except Exception as e2:
                 browser.find_element_by_id(sub_option).click()
+    elif i != 4:
+        sub_contents = browser.find_elements_by_xpath("//*[@class='dor_organismos_selecc Class_id_link_org_link']")
+        sub_options = [sub_content.get_attribute("id") for sub_content in sub_contents]
+        for sub_option in sub_options:
+            print(sub_option)
+            browser.find_element_by_id(sub_option).click()
+            sleep(2)
+            try:
+                browser.get(page_url)
+                browser.find_element_by_id(id_option).click()
+            except Exception as e3:
+                browser.find_element_by_id(id_option).click()
+
+
+
 
 
     i += 1
