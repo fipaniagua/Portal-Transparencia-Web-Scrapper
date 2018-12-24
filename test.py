@@ -1,12 +1,19 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from time import sleep
-
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
+from time import sleep
+from openpyxl import Workbook, load_workbook
 
+
+def save_meta_data(org, sub_org, tipo_contrato, mes, year, website):
+    wb = load_workbook('datos_links.xlsx')
+    ws = wb.active
+    ws.append([org, sub_org, tipo_contrato, mes, year, website])
+    wb.save('datos_links.xlsx')
+    return
 
 def get_options_by_class(class_name):
     browser.implicitly_wait(40)
@@ -17,17 +24,17 @@ def get_options_by_class(class_name):
     return sub_options
 
 
-def handler_second_window_1():
-    differents = ["Política de Remuneraciones del Consejo para la Transparencia Enlace Externo",
-                  "Histórico de Personal y Remuneraciones a Diciembre 2013 ",
+def handler_second_window_1(org, sub_org):
+    differents = [" Política de Remuneraciones del Consejo para la Transparencia ",
+                  " Histórico de Personal y Remuneraciones a Diciembre 2013 ",
                   "Escala Remuneraciones (*)" ]
     browser.switch_to_window(browser.window_handles[1])
-    contracts_links = browser.find_elements_by_xpath('//*[@id="A2248:form:j_idt30:0:datalist_list"]/li[4]//a')
-    contracts_ids = [contract.get_attribute("id") for contract in contracts_links]
-    for contract_id in contracts_ids:
-        contract = browser.find_element_by_id(contract_id)
+    amount_contracts = len(browser.find_elements_by_xpath('//*[@id="A2248:form:j_idt30:0:datalist_list"]/li[4]//a'))
+    for index_contract in range(amount_contracts):
+        contract = browser.find_elements_by_xpath('//*[@id="A2248:form:j_idt30:0:datalist_list"]/li[4]//a')[index_contract]
         if not contract.get_attribute("title") in differents:
-            print(contract.get_attribute("title"))
+            tipo_contrato = contract.get_attribute("title")
+            print(tipo_contrato)
             contract.click()
             browser.implicitly_wait(0)
             conteiner = browser.find_elements_by_xpath('//*[@id="A2248:form-visualizar:preview-tipo-padre"]')
@@ -38,23 +45,25 @@ def handler_second_window_1():
 
                 for index_ano in range(amount_anos):
                     ano_link = browser.find_elements_by_xpath('//*[@id="A2248:form-visualizar:preview-tipo-padre"]//a')[index_ano]
+                    ano_text = ano_link.text
                     ano_link.click()
                     amount_meses = len(browser.find_elements_by_xpath('//*[@id="A2248:form-visualizar:preview-tipo-padre"]//a'))
                     for index_mes in range(amount_meses):
                         mes_link = browser.find_elements_by_xpath('//*[@id="A2248:form-visualizar:preview-tipo-padre"]//a')[index_mes]
+                        mes_text = mes_link.text
                         mes_link.click()
+                        save_meta_data(org, sub_org, tipo_contrato, ano_text, mes_text, browser.current_url)
                         sleep(1)
                         browser.back()
 
                     browser.back()
 
-            sleep(2)
+            sleep(1)
             browser.back()
 
-    sleep(5)
+    sleep(1)
     browser.close()
     browser.switch_to_window(browser.window_handles[0])
-    sleep(5)
     return
 
 path_to_chromedriver = "./chromedriver"
@@ -75,8 +84,11 @@ for id_option in options[:18]:
     print("scope1:", id_option, "i:", i)
     try:
         browser.get(page_url)
+        org = browser.find_element_by_id(id_option).text
         browser.find_element_by_id(id_option).click()
     except Exception as e1:
+        browser.get(page_url)
+        org = browser.find_element_by_id(id_option).text
         browser.find_element_by_id(id_option).click()
 
     if i in org_with_3options :
@@ -93,11 +105,12 @@ for id_option in options[:18]:
         sub_options = [sub_content.get_attribute("id") for sub_content in sub_contents]
         for sub_option in sub_options:
             print(sub_option)
+            sub_org = browser.find_element_by_id(sub_option).text
             browser.find_element_by_id(sub_option).click()
             btn_to_new_window = browser.find_element_by_partial_link_text('Vea la informac')
             if "portaltransparencia" in btn_to_new_window.get_attribute("href"):
                 btn_to_new_window.click()
-                handler_second_window_1()
+                handler_second_window_1(org, sub_org)
             sleep(2)
             try:
                 browser.get(page_url)
