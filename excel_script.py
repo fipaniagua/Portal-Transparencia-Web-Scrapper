@@ -1,8 +1,6 @@
 from openpyxl import Workbook, load_workbook
 
 
-
-
 def save_meta_data(org, sub_org, tipo_contrato, mes, year, website):
     wb = load_workbook('datos_links.xlsx')
     ws = wb.active
