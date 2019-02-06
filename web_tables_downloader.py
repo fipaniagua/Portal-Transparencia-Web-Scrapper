@@ -66,7 +66,7 @@ succes = 0
 st = time()
 for row in rows[i-1:]:
     cells = list(row)
-    file_name = "./data/{6}/{0}_{1}_{2}_{3}_{4}_({5}).xlsx".format(cells[0].value, cells[1].value, cells[4].value, cells[3].value, cells[2].value, i, selected_muni)
+    file_name = "./data/{0}_{1}_{2}_{3}_{4}_({5}).xlsx".format(cells[0].value, cells[1].value, cells[4].value, cells[3].value, cells[2].value, i)
     #file_name = "./data_muni/{6}/{0}_{1}_{2}_{3}_{4}_({5}).xlsx".format(cells[0].value, cells[1].value, cells[4].value, cells[3].value, cells[2].value, i, selected_muni)
     print(file_name)
     print("i:", i)

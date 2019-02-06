@@ -15,28 +15,14 @@ def clean_extra_tabs():
                 browser.close()
     browser.switch_to_window(handles[0])
 
-def save_meta_data(org, sub_org, tipo_contrato, mes, year, website, extra = None, second_colum = ""):
-    wb = load_workbook('./links_muni/datos_links_{0}.xlsx'.format(second_colum))
+def save_meta_data(org, sub_org, tipo_contrato, mes, year, website, extra = None):
+    wb = load_workbook('./datos_links.xlsx')
     ws = wb.active
     ws.append([org, sub_org, tipo_contrato, mes, year, extra, website])
-    wb.save('./links_muni/datos_links_{0}.xlsx'.format(second_colum))
+    wb.save('./datos_links.xlsx')
     return
 
-
-def get_options_by_class(class_name):
-    browser.implicitly_wait(4)
-    sub_contents = browser.find_elements_by_class_name(class_name)
-    sub_options = []
-    for sub_content in sub_contents:
-        sub_options.append(sub_content.get_attribute("id"))
-    return sub_options
-
-
-
-def handler_second_window_1(org, sub_org, windows_3 = False, sub_option=""):
-    differents = ["Política de Remuneraciones del Consejo para la Transparencia",
-                  "Histórico de Personal y Remuneraciones a Diciembre 2013",
-                  "Escala Remuneraciones (*)", "Escala Remuneraciones" ]
+def handler_second_window_1(org, sub_org, differents, windows_3 = False, sub_option=""):
     browser.switch_to_window(browser.window_handles[1])
     amount_contracts = len(browser.find_elements_by_xpath('//*[@id="A2248:form:j_idt30:0:datalist_list"]/li[4]//a'))
     for index_contract in range(amount_contracts):
@@ -51,7 +37,6 @@ def handler_second_window_1(org, sub_org, windows_3 = False, sub_option=""):
             if len(conteiner) > 0:
                 amount_anos = len(browser.find_elements_by_xpath('//*[@id="A2248:form-visualizar:preview-tipo-padre"]//a'))
                 #anos_ids = [ano_link.get_attribute("id") for ano_link in anos_links]
-
                 for index_ano in range(amount_anos):
                     ano_link = browser.find_elements_by_xpath('//*[@id="A2248:form-visualizar:preview-tipo-padre"]//a')[index_ano]
                     ano_text = ano_link.text
@@ -60,19 +45,22 @@ def handler_second_window_1(org, sub_org, windows_3 = False, sub_option=""):
                     for index_mes in range(amount_meses):
                         mes_link = browser.find_elements_by_xpath('//*[@id="A2248:form-visualizar:preview-tipo-padre"]//a')[index_mes]
                         mes_text = mes_link.text
-                        mes_link.click()
+                        #print(mes_text)
                         if windows_3:
+                            mes_link.click()
                             amount_links = len(browser.find_elements_by_xpath('//*[@id="A2248:form-visualizar:preview-tipo-padre"]//a'))
                             for index_link in range(amount_links):
                                 link = browser.find_elements_by_xpath('//*[@id="A2248:form-visualizar:preview-tipo-padre"]//a')[index_link]
                                 link_text = link.text
                                 link_href = link.get_attribute('href')
                                 #link.click()
-                                save_meta_data(org, sub_org, tipo_contrato, mes_text, link_text, link_href, ano_text, sub_option)
+                                save_meta_data(org, sub_org, tipo_contrato, mes_text, link_text, link_href, ano_text)
+                            browser.back()
                         else:
+                            link_href = mes_link.get_attribute('href')
                             save_meta_data(org, sub_org, tipo_contrato, ano_text, mes_text, link_href, sub_option)
                         sleep(1)
-                        browser.back()
+                        #browser.back()
                     browser.back()
 
             sleep(1)
@@ -81,108 +69,87 @@ def handler_second_window_1(org, sub_org, windows_3 = False, sub_option=""):
     browser.switch_to_window(browser.window_handles[0])
     return
 
-path_to_chromedriver = "./chromedriver"
-browser = webdriver.Chrome(executable_path = path_to_chromedriver)
-main_page_url = "https://www.portaltransparencia.cl/PortalPdT/web/guest/home"
-page_url = "https://www.portaltransparencia.cl/PortalPdT/web/guest/directorio-de-organismos-regulados"
 
-browser.get(main_page_url)
-first_link_xpath = "/html/body/div[1]/div/div[2]/div/div/div/div/div/div[1]/div/div[1]/a[2]"
-browser.find_element_by_xpath(first_link_xpath).click()
+def run(start, end, org_with_3row, sub_org_with_3options, org_with_3options, differents, page_url):
+    contents = browser.find_elements_by_class_name('dor_org_no_senialado')
+    options = [content.get_attribute("id") for content in contents]
+    i = start
+    print(org_with_3row)
+    print(start)
+    print(end)
+    for id_option in options[start:end]:
+        print("scope1:", id_option, "i:", i)
 
-contents = browser.find_elements_by_class_name('dor_org_no_senialado')
-options = [content.get_attribute("id") for content in contents]
-
-start = False
-org_with_3options = [0,11,12]
-sub_org_with_3options = ["Corporaciones Municipales"]
-i = 12
-for id_option in options[12:13]:
-    print("scope1:", id_option, "i:", i)
-    try:
-        browser.get(page_url)
-        org = browser.find_element_by_id(id_option).text
-        browser.find_element_by_id(id_option).click()
-    except Exception as e1:
-        browser.get(page_url)
-        org = browser.find_element_by_id(id_option).text
-        browser.find_element_by_id(id_option).click()
-
-    if i in org_with_3options :
-
-
-        sub_options = get_options_by_class('dor_org_hijo_no_senialado')
-        for sub_option in sub_options:
-            print("scope2:", sub_option)
-            try:
-                browser.implicitly_wait(5)
-                sub_org = browser.find_element_by_id(sub_option).text
-                browser.find_element_by_id(sub_option).click()
-            except Exception as e2:
-                browser.implicitly_wait(5)
-                sub_org = browser.find_element_by_id(sub_option).text
-                browser.find_element_by_id(sub_option).click()
-            sleep(1)
-            amount_links = len(browser.find_elements_by_xpath('//*[@id="A3684:form:organismos"]//a'))
-            print(amount_links)
-            for index_link in range(amount_links):
-                link = browser.find_elements_by_xpath('//*[@id="A3684:form:organismos"]//a')[index_link]
-                sub_org_name = link.text
-                print("*",sub_org_name)
-
-                if sub_org_name in "Municipalidad de Algarrobo":
-                    start = True
-                if not start:
-                    continue
-                if sub_org_name in "Municipalidad de Zapallar":
-                    raise Exception
-
-
-                link.click()
-                browser.implicitly_wait(15)
-                btn_to_new_window = browser.find_element_by_partial_link_text('Vea la informac')
-                browser.implicitly_wait(5)
-                if "portaltransparencia" in btn_to_new_window.get_attribute("href"):
-                    if sub_org in sub_org_with_3options:
-                        windows_3 = True
-                    else:
-                        windows_3 = False
-                    windows_3 = True
-                    clean_extra_tabs()
-                    btn_to_new_window.click()
-                    handler_second_window_1(org, sub_org_name, windows_3, sub_org)
-                sleep(1)
-                try:
-                    browser.get(page_url)
-                    browser.find_element_by_id(id_option).click()
-                    browser.find_element_by_id(sub_option).click()
-                except Exception as e3:
-                    browser.get(page_url)
-                    browser.find_element_by_id(id_option).click()
-                    browser.find_element_by_id(sub_option).click()
-                sleep(1)
-
-
-    elif i != 4:
         browser.implicitly_wait(5)
-        sub_contents = browser.find_elements_by_xpath("//*[@class='dor_organismos_selecc Class_id_link_org_link']")
+        browser.get(page_url)
+        org = browser.find_element_by_id(id_option).text
+        browser.find_element_by_id(id_option).click()
+        if not i in org_with_3row:
+            sub_contents = browser.find_elements_by_xpath("//*[@class='dor_organismos_selecc Class_id_link_org_link']")
+        else:
+            sub_contents = browser.find_elements_by_class_name('dor_org_hijo_no_senialado')
+
         sub_options = [sub_content.get_attribute("id") for sub_content in sub_contents]
         print(len(sub_options))
         for sub_option in sub_options:
             print(sub_option)
             sub_org = browser.find_element_by_id(sub_option).text
             browser.find_element_by_id(sub_option).click()
-            btn_to_new_window = browser.find_element_by_partial_link_text('Vea la informac')
-            if "portaltransparencia" in btn_to_new_window.get_attribute("href"):
-                btn_to_new_window.click()
-                handler_second_window_1(org, sub_org)
-            sleep(1)
-            try:
-                browser.get(page_url)
-                browser.find_element_by_id(id_option).click()
-            except Exception as e3:
-                browser.get(page_url)
-                browser.find_element_by_id(id_option).click()
+            if not i in org_with_3row:
+                btn_to_new_window = browser.find_element_by_partial_link_text('Vea la informac')
+                if "portaltransparencia" in btn_to_new_window.get_attribute("href"):
+                    if sub_org in sub_org_with_3options:
+                        windows_3 = True
+                    else:
+                        windows_3 = False
+                    clean_extra_tabs()
+                    btn_to_new_window.click()
+                    handler_second_window_1(org, sub_org, differents, windows_3)
+                    sleep(1)
+                    browser.get(page_url)
+                    browser.find_element_by_id(id_option).click()
 
-    i += 1
-    sleep(1)
+            else:
+                sleep(1)
+                amount_links = len(browser.find_elements_by_xpath('//*[@id="A3684:form:organismos"]//a'))
+                print(amount_links)
+                for index_link in range(amount_links):
+                    link = browser.find_elements_by_xpath('//*[@id="A3684:form:organismos"]//a')[index_link]
+                    sub_org_name = link.text
+                    print("*",sub_org_name)
+                    link.click()
+                    browser.implicitly_wait(15)
+                    btn_to_new_window = browser.find_element_by_partial_link_text('Vea la informac')
+                    browser.implicitly_wait(5)
+                    if "portaltransparencia" in btn_to_new_window.get_attribute("href"):
+                        if sub_org in sub_org_with_3options or org in org_with_3options:
+                            windows_3 = True
+                        else:
+                            windows_3 = False
+                        clean_extra_tabs()
+                        btn_to_new_window.click()
+                        handler_second_window_1(org, sub_org_name, differents, windows_3, sub_org)
+                    sleep(1)
+                    browser.get(page_url)
+                    browser.find_element_by_id(id_option).click()
+                    browser.find_element_by_id(sub_option).click()
+        i += 1
+        sleep(1)
+    return
+
+
+if __name__ == "__main__":
+    path_to_chromedriver = "./chromedriver"
+    browser = webdriver.Chrome(executable_path = path_to_chromedriver)
+    page_url = "https://www.portaltransparencia.cl/PortalPdT/web/guest/directorio-de-organismos-regulados"
+
+    browser.get(page_url)
+    org_with_3row = [0,11,12]
+    sub_org_with_3options = ["Corporaciones Municipales"]
+    org_with_3options = ["Municipalidades"]
+    differents = ["Política de Remuneraciones del Consejo para la Transparencia",
+                  "Histórico de Personal y Remuneraciones a Diciembre 2013",
+                  "Escala Remuneraciones (*)", "Escala Remuneraciones" ]
+    start = 1
+    end = -1
+    run(start ,end, org_with_3row ,sub_org_with_3options, org_with_3options,differents,  page_url)
