@@ -1,7 +1,7 @@
 # Portal Transparencia Web scrapper
-Use **selenium** library to make a scrapper for http://portaltransparencia.cl/ chilean goberment page. Also use **beutifulsoup** + **openpyxl** to save web html tables into xlsx files.
+I use **selenium** library to make a scrapper for http://portaltransparencia.cl/ chilean goberment page. Also use **beutifulsoup** + **openpyxl** to save web html tables into xlsx files.
 
-## Use
+## Usage
 
 * Modify webscrapper.py to tune the needed parameters. (from *run* function) 
 * Run webscrapper.py, this will save the links to the web tables, along side their respective metadata, in data_links.xlsx . 
